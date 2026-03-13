@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest
+
+      - name: Initialize database
+        run: python init_db.py
+
+      - name: Run tests
+        run: pytest tests/ -v --tb=short
+
+      - name: Import smoke test
+        run: |
+          python -c "
+          from src.models import InvoiceSchema, LineItem
+          from src.state import AuditState
+          from src.tools import fetch_po_details, fetch_gr_details, fuzzy_match_vendor, check_db_connection
+          from src.analytics import get_audit_stats, get_vendor_risk_scores
+          print('All imports OK')
+          connected, msg = check_db_connection()
+          assert connected, f'DB not connected: {msg}'
+          print(f'DB: {msg}')
+          "

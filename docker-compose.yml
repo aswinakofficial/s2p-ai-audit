@@ -1,0 +1,12 @@
+version: "3.9"
+
+services:
+  s2p-audit:
+    build: .
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    volumes:
+      - ./erp_system.db:/app/erp_system.db
+    restart: unless-stopped

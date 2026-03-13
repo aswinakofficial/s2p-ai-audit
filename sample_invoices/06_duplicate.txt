@@ -1,0 +1,8 @@
+Invoice from Acme Corp
+PO: PO-006
+
+Office Chair Ergonomic Pro — 30 units at $350.00
+
+Subtotal: $10,500.00
+Tax: $0.00
+Total: $10,500.00

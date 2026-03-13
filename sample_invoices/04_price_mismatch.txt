@@ -1,0 +1,8 @@
+Invoice from NexGen Solutions
+PO: PO-004
+
+Network Switch 48-Port x 20 units @ $52.00 per unit
+
+Subtotal: $1,040.00
+Tax: $0.00
+Total: $1,040.00

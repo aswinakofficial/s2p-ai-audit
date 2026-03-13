@@ -3,13 +3,14 @@
   <img src="https://img.shields.io/badge/LangGraph-Stateful_AI-FF6F00?style=for-the-badge&logo=chainlink&logoColor=white" />
   <img src="https://img.shields.io/badge/Streamlit-Enterprise_UI-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white" />
   <img src="https://img.shields.io/badge/OpenAI-GPT--4o-412991?style=for-the-badge&logo=openai&logoColor=white" />
+  <img src="https://img.shields.io/badge/Tests-26%20Passing-10b981?style=for-the-badge" />
 </p>
 
-# 🔍 S2P Audit Core
+# 🔍 S2P AI Audit
 
 **Production-grade, AI-powered Three-Way Match audit engine for enterprise procurement.**
 
-S2P Audit Core automates the most critical control point in Source-to-Pay (S2P) workflows: the **Three-Way Match** — verifying that every invoice aligns with its Purchase Order and Goods Receipt before payment is authorized.
+S2P AI Audit automates the most critical control point in Source-to-Pay (S2P) workflows: the **Three-Way Match** — verifying that every invoice aligns with its Purchase Order and Goods Receipt before payment is authorized.
 
 > Traditional ERP systems rely on rigid, rule-based matching that fails on messy real-world data.  
 > This system combines **LLM-powered document understanding** with **deterministic financial auditing** — the AI reads, but Python does the math.
@@ -20,12 +21,13 @@ S2P Audit Core automates the most critical control point in Source-to-Pay (S2P) 
 
 In enterprise procurement, **duplicate and fraudulent payments** cost organizations an estimated 1-2% of total revenue annually. Three-Way Matching is the primary control — but it's still largely manual in most organizations:
 
-| Challenge | How S2P Audit Core Solves It |
+| Challenge | How S2P AI Audit Solves It |
 |---|---|
 | Invoices arrive as unstructured text/OCR | GPT-4o extracts structured data with confidence scoring |
 | Vendor names have typos across systems | Fuzzy matching with configurable similarity thresholds |
 | Partial shipments create quantity mismatches | GR-aware quantity validation (cannot bill for unreceived goods) |
 | Price discrepancies need tolerance bands | Configurable tolerance (default: 1%) with line-level variance reporting |
+| Duplicate invoices slip through | Automatic duplicate detection against audit history |
 | Auditors need explainability, not black boxes | Every decision is deterministic Python — fully auditable |
 
 ---
@@ -33,40 +35,45 @@ In enterprise procurement, **duplicate and fraudulent payments** cost organizati
 ## 🏗️ Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Streamlit Enterprise UI                      │
-│         (Upload · Real-time Status · Audit Dashboard)           │
-└──────────────────────────┬──────────────────────────────────────┘
-                           │
-┌──────────────────────────▼──────────────────────────────────────┐
-│                    LangGraph Workflow Engine                     │
-│                                                                 │
-│  ┌──────────┐    ┌──────────────┐    ┌─────────────────────┐   │
-│  │ Extract  │───▶│  Fetch ERP   │───▶│ Deterministic Audit │   │
-│  │ (GPT-4o) │    │ + Fuzzy Match│    │  (Pure Python)      │   │
-│  └──────────┘    └──────────────┘    └──────────┬──────────┘   │
-│                                                  │              │
-│                                    ┌─────────────┴───────────┐  │
-│                                    │  Conditional Routing     │  │
-│                                    │  AUTO_APPROVED │ REVIEW  │  │
-│                                    └─────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
-                           │
-┌──────────────────────────▼──────────────────────────────────────┐
-│                    SQLite Mock ERP Layer                         │
-│              (PO Master · Goods Receipts · Seed Data)           │
-└─────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────┐
+│                 Multi-Page Streamlit Enterprise UI                    │
+│  ┌─────────────┐  ┌──────────────────┐  ┌────────────────────────┐  │
+│  │ Audit Engine │  │ Analytics & Trends│  │ ERP Data Manager      │  │
+│  └──────┬──────┘  └──────────────────┘  └────────────────────────┘  │
+└─────────┼────────────────────────────────────────────────────────────┘
+          │
+┌─────────▼────────────────────────────────────────────────────────────┐
+│                  LangGraph Workflow Engine                             │
+│                                                                       │
+│  ┌──────────┐    ┌────────────────┐    ┌──────────────────────────┐  │
+│  │ Extract  │───▶│  Fetch ERP +   │───▶│  Deterministic Audit     │  │
+│  │ (GPT-4o) │    │  Vendor Match  │    │  + Duplicate Detection   │  │
+│  │ ↓ fallback    │  + Vendor Master│    │  + History Persistence   │  │
+│  │ (GPT-4o-mini) └────────────────┘    └──────────┬───────────────┘  │
+│  └──────────┘                                     │                   │
+│                                      ┌────────────┴──────────────┐   │
+│                                      │   Conditional Routing      │   │
+│                                      │  AUTO_APPROVED │ REVIEW    │   │
+│                                      └───────────────────────────┘   │
+└──────────────────────────────────────────────────────────────────────┘
+          │
+┌─────────▼────────────────────────────────────────────────────────────┐
+│                     SQLite ERP Layer                                   │
+│        PO Master · Goods Receipts · Vendor Master · Audit History     │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Design Principles
 
-1. **AI Reads, Python Audits** — The LLM's *only* job is extracting structured data from unstructured text. All financial logic (quantity checks, price tolerance, variance reporting) runs in deterministic Python. No LLM hallucination in the audit path.
+1. **AI Reads, Python Audits** — The LLM's *only* job is extracting structured data from unstructured text. All financial logic runs in deterministic Python. No LLM hallucination in the audit path.
 
-2. **Stateful Execution via LangGraph** — Not a simple chain. The workflow is a compiled `StateGraph` with typed state, explicit edges, and conditional routing. Every node receives and returns a well-defined `TypedDict` state.
+2. **Stateful Execution via LangGraph** — Not a simple chain. The workflow is a compiled `StateGraph` with typed state, conditional edges, and error-aware routing with LLM fallback.
 
-3. **Fail-Safe Routing** — Any variance (quantity, price, vendor mismatch) OR low extraction confidence (< 85%) automatically routes to `MANUAL_REVIEW`. The system errs on the side of caution.
+3. **Five Audit Checks** — Quantity vs GR, price tolerance, vendor verification, duplicate detection, and vendor risk tier assessment.
 
-4. **Enterprise-Ready Patterns** — Pydantic v2 validation on all LLM outputs, fuzzy matching for real-world vendor name inconsistencies, line-level audit trails, structured error handling.
+4. **Fail-Safe Routing** — Any variance OR low confidence (< 85%) automatically routes to `MANUAL_REVIEW`. The system errs on the side of caution.
+
+5. **Full Audit Trail** — Every invoice processed is persisted to `invoice_history` for trend analysis and duplicate detection.
 
 ---
 
@@ -74,19 +81,32 @@ In enterprise procurement, **duplicate and fraudulent payments** cost organizati
 
 ```
 s2p-ai-audit/
-├── README.md                  # You are here
-├── requirements.txt           # Production dependencies
-├── .env                       # API key configuration
-├── init_db.py                 # Mock ERP database seeder
-├── app.py                     # Streamlit enterprise dashboard
-├── erp_system.db              # SQLite database (generated)
-└── src/
-    ├── __init__.py
-    ├── models.py              # Pydantic v2 schemas (InvoiceSchema, LineItem)
-    ├── state.py               # LangGraph TypedDict state definition
-    ├── tools.py               # SQLite queries + fuzzy vendor matching
-    ├── nodes.py               # LangGraph node functions (extract, fetch, audit)
-    └── graph.py               # StateGraph assembly + conditional routing
+├── README.md
+├── requirements.txt
+├── .env                        # API key config (gitignored)
+├── init_db.py                  # Mock ERP database seeder (6 POs, 5 vendors)
+├── app.py                      # Multi-page Streamlit dashboard
+├── Dockerfile                  # Multi-stage production build
+├── docker-compose.yml          # One-command deployment
+├── sample_invoices/            # Pre-made test invoices for each edge case
+│   ├── 01_perfect_match.txt
+│   ├── 02_qty_mismatch.txt
+│   ├── 03_vendor_typo.txt
+│   ├── 04_price_mismatch.txt
+│   ├── 05_multiline_mixed.txt
+│   └── 06_duplicate.txt
+├── src/
+│   ├── __init__.py
+│   ├── models.py               # Pydantic v2 schemas (InvoiceSchema, LineItem)
+│   ├── state.py                # LangGraph TypedDict state definition
+│   ├── tools.py                # SQLite queries, fuzzy matching, duplicate detection
+│   ├── nodes.py                # LangGraph nodes (extract, fetch, audit)
+│   ├── graph.py                # StateGraph assembly with error-aware routing
+│   └── analytics.py            # Audit stats, variance trends, vendor risk scoring
+├── tests/
+│   ├── test_tools.py           # 18 unit tests for queries, matching, persistence
+│   └── test_nodes.py           # 8 integration tests for audit logic
+└── .github/workflows/ci.yml   # GitHub Actions CI (lint, test, smoke test)
 ```
 
 ---
@@ -94,7 +114,6 @@ s2p-ai-audit/
 ## 🚀 Quick Start
 
 ### Prerequisites
-
 - Python 3.10+
 - An OpenAI API key with access to `gpt-4o`
 
@@ -123,23 +142,40 @@ python init_db.py
 streamlit run app.py
 ```
 
-### Test It
+### Docker
 
-Create a file called `invoice_test.txt`:
-
-```
-Invoice from TechSupply Inc for PO-002.
-Billing for 100 units of Server Rack Unit 42U at $50.00 each.
-Subtotal: $5,000.00
-Tax: $0.00
-Total: $5,000.00
+```bash
+docker-compose up --build
+# Open http://localhost:8501
 ```
 
-Upload it through the UI. The system will:
-1. ✅ Extract the invoice data via GPT-4o
-2. ✅ Fetch PO-002 from the ERP (ordered 100 units)
-3. ❌ **Flag it** — only 50 units were received (GR), but 100 are being billed
-4. → Route to **MANUAL REVIEW**
+### Test
+
+```bash
+pytest tests/ -v
+# 26 tests, all passing
+```
+
+---
+
+## 🖥️ Dashboard Pages
+
+### Page 1: Audit Engine
+- **Upload** invoice text files or **generate sample invoices** from 6 pre-built edge cases
+- Real-time step-by-step execution with `st.status`
+- Two-column results: extracted data (left) + color-coded audit report (right)
+- Big status card: `AUTO_APPROVED` ✅ or `MANUAL_REVIEW` ⚠️
+
+### Page 2: Analytics
+- Summary metrics: total audits, approval rate, avg confidence, total variances
+- Filterable audit history table with CSV export
+- Common flags bar chart
+- Vendor risk assessment scores
+
+### Page 3: ERP Data Manager
+- Browse PO Master, Goods Receipts, Vendor Registry
+- PO fulfillment tracking with progress bars
+- Tabbed interface for data exploration
 
 ---
 
@@ -153,20 +189,23 @@ Upload it through the UI. The system will:
 | **Goods Receipt (GR)** | Warehouse/Logistics | "We physically received Z items" |
 | **Invoice** | Vendor/Supplier | "Please pay us for N items at M price" |
 
-### Audit Checks (Deterministic)
+### Five Audit Checks (All Deterministic)
 
 ```python
-# Check 1: Quantity Validation
-# Cannot bill for items not yet received
+# Check 1: Quantity — cannot bill for unreceived items
 assert invoice_qty <= gr_received_qty
 
-# Check 2: Price Tolerance (1% band)
-# Unit price must match PO within tolerance
+# Check 2: Price — must match PO within 1% tolerance
 assert abs(invoice_price - po_price) / po_price <= 0.01
 
-# Check 3: Vendor Verification (Fuzzy)
-# Handles typos: "TechSupply" vs "Tech Supply Inc"
+# Check 3: Vendor — fuzzy match handles typos
 assert fuzzy_score(invoice_vendor, po_vendor) >= 75
+
+# Check 4: Duplicate — same PO + vendor + amount already billed?
+assert not is_duplicate_invoice(po_number, vendor, total)
+
+# Check 5: Vendor Risk — flag high-risk vendors
+if vendor_risk_tier == "HIGH": add_flag("HIGH_RISK_VENDOR")
 ```
 
 ### Routing Logic
@@ -175,6 +214,7 @@ assert fuzzy_score(invoice_vendor, po_vendor) >= 75
 IF    total_variances == 0
   AND confidence_score >= 0.85
   AND vendor_match == True
+  AND no_duplicate == True
 THEN  → AUTO_APPROVED ✅
 
 ELSE  → MANUAL_REVIEW ⚠️
@@ -182,15 +222,16 @@ ELSE  → MANUAL_REVIEW ⚠️
 
 ---
 
-## 🧪 Seed Data & Edge Cases
+## 🧪 Edge Cases & Sample Invoices
 
-The mock ERP (`init_db.py`) includes carefully designed edge cases:
-
-| PO Number | Scenario | Expected Outcome |
-|---|---|---|
-| `PO-001` | ✅ Perfect match — quantities and prices align | `AUTO_APPROVED` |
-| `PO-002` | ⚠️ Partial receipt — ordered 100, received 50 | `MANUAL_REVIEW` if invoice > 50 units |
-| `PO-003` | ⚠️ Vendor name mismatch — typo across systems | Tests fuzzy matching threshold |
+| File | PO | Scenario | Expected |
+|---|---|---|---|
+| `01_perfect_match.txt` | PO-001 | All quantities and prices match | `AUTO_APPROVED` |
+| `02_qty_mismatch.txt` | PO-002 | Bills 100 units, only 50 received | `MANUAL_REVIEW` |
+| `03_vendor_typo.txt` | PO-003 | "GlobalTech Pvt Ltd" vs "GlobalTech India" | `MANUAL_REVIEW` |
+| `04_price_mismatch.txt` | PO-004 | $52 invoice vs $50 PO (4% deviation) | `MANUAL_REVIEW` |
+| `05_multiline_mixed.txt` | PO-005 | 3 items: 2 pass, 1 fails (qty) | `MANUAL_REVIEW` |
+| `06_duplicate.txt` | PO-006 | Same PO+vendor+amount already processed | `MANUAL_REVIEW` |
 
 ---
 
@@ -198,65 +239,44 @@ The mock ERP (`init_db.py`) includes carefully designed edge cases:
 
 ### LangGraph State Machine
 
-The workflow is compiled as a `StateGraph` — not a simple sequential chain. Each node is a pure function that receives typed state and returns a partial update:
-
 ```python
 class AuditState(TypedDict):
     file_name: str                          # Input filename
     raw_text: str                           # Raw invoice text
-    extracted_data: Optional[InvoiceSchema] # LLM extraction output
-    erp_context: Optional[dict]             # PO + GR data from ERP
-    audit_report: Optional[dict]            # Line-level audit results
+    extracted_data: Optional[InvoiceSchema] # LLM extraction (Pydantic v2)
+    erp_context: Optional[dict]             # PO + GR + Vendor Master data
+    audit_report: Optional[dict]            # Line-level audit with variances
     status: str                             # PENDING → APPROVED | MANUAL_REVIEW
 ```
 
-### Structured LLM Output
+### Error-Resilient Graph
 
-Instead of parsing free-text LLM responses, the system uses LangChain's `.with_structured_output()` to force GPT-4o to return a validated Pydantic v2 model:
+```python
+# Primary: GPT-4o → Fallback: GPT-4o-mini
+# On complete failure: error_handler route → structured error report
+extract → [success] → fetch_erp → deterministic_audit → END
+extract → [failure] → deterministic_audit (error report) → END
+```
+
+### Structured LLM Output (No String Parsing)
 
 ```python
 structured_llm = ChatOpenAI(model="gpt-4o", temperature=0)
     .with_structured_output(InvoiceSchema)
-
-# Returns a validated InvoiceSchema instance — not a string
-result: InvoiceSchema = structured_llm.invoke(messages)
+result: InvoiceSchema = structured_llm.invoke(messages)  # Validated Pydantic
 ```
-
-### Fuzzy Vendor Matching
-
-Real-world vendor names are inconsistent across documents. The system uses token-sort ratio matching, which normalizes word order and casing before comparing:
-
-```python
-fuzzy_match("TechSupply Inc", "Tech Supply")  # → (True, 82)
-fuzzy_match("Acme Corp", "Acme Corporation")  # → (True, 87)
-fuzzy_match("Vendor A", "Totally Different")   # → (False, 23)
-```
-
----
-
-## 📊 Streamlit Dashboard
-
-The enterprise UI provides:
-
-- **Sidebar Console** — Real-time database connection status, ERP data viewer
-- **File Upload** — Drag-and-drop `.txt` files (simulating OCR output)
-- **Live Execution Status** — Step-by-step progress of the LangGraph workflow
-- **Split-View Results**:
-  - Left panel: Extracted invoice data with confidence metrics
-  - Right panel: Audit report with color-coded variance indicators (🟢 PASS / 🔴 FAIL)
-- **Final Verdict** — Large status card: `AUTO_APPROVED` or `MANUAL_REVIEW`
 
 ---
 
 ## 🗺️ Roadmap
 
 - [ ] **PDF/Image Invoice Support** — OCR integration (Tesseract / Azure Document Intelligence)
-- [ ] **Multi-line PO Matching** — Fuzzy item description matching across line items
-- [ ] **Batch Processing** — Upload multiple invoices with aggregate reporting
-- [ ] **PostgreSQL Backend** — Replace SQLite for production deployments
-- [ ] **Audit Trail Persistence** — Store all audit decisions with timestamps
+- [ ] **Multi-line PO Matching** — Advanced fuzzy matching across item descriptions
+- [ ] **Real-time WebSocket Updates** — Live audit status streaming
+- [ ] **PostgreSQL Backend** — Replace SQLite for team deployments
 - [ ] **Role-Based Access** — Reviewer vs. Approver workflows
 - [ ] **Webhook Integration** — Notify downstream systems on auto-approval
+- [ ] **LangSmith Observability** — Full trace of every LLM call and graph execution
 
 ---
 
@@ -264,13 +284,14 @@ The enterprise UI provides:
 
 | Layer | Technology | Purpose |
 |---|---|---|
-| **AI Orchestration** | LangGraph | Stateful workflow engine with conditional routing |
-| **LLM** | OpenAI GPT-4o | Structured invoice data extraction |
+| **AI Orchestration** | LangGraph | Stateful workflow with conditional routing |
+| **LLM** | OpenAI GPT-4o | Structured invoice extraction (+ GPT-4o-mini fallback) |
 | **Validation** | Pydantic v2 | Schema enforcement on LLM outputs |
-| **Database** | SQLite + pandas | Mock ERP data layer |
-| **Fuzzy Matching** | thefuzz (Levenshtein) | Vendor name normalization |
-| **UI** | Streamlit | Enterprise dashboard with Carbon design language |
-| **Config** | python-dotenv | Environment-based configuration |
+| **Database** | SQLite + pandas | Mock ERP with 4 tables |
+| **Fuzzy Matching** | thefuzz (Levenshtein) | Vendor + item description normalization |
+| **UI** | Streamlit | Multi-page enterprise dashboard |
+| **CI/CD** | GitHub Actions | Automated testing on push |
+| **Containerization** | Docker | Production-ready deployment |
 
 ---
 
@@ -281,5 +302,5 @@ MIT
 ---
 
 <p align="center">
-  <sub>Built with ⚡ LangGraph · 🧠 GPT-4o · 🐍 Python</sub>
+  <sub>Built with ⚡ LangGraph · 🧠 GPT-4o · 🐍 Python · 26 tests passing</sub>
 </p>

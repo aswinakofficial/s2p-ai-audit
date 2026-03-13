@@ -1,0 +1,10 @@
+Invoice from Acme Corp
+PO Number: PO-001
+
+Line Items:
+1. Laptop Dell Latitude 5540 — Qty: 50 — Unit Price: $1,200.00
+2. Wireless Mouse Logitech MX — Qty: 50 — Unit Price: $45.00
+
+Subtotal: $62,250.00
+Tax: $0.00
+Total: $62,250.00

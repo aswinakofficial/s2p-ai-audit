@@ -1,0 +1,5 @@
+Invoice from TechSupply Inc for PO-002.
+Billing for 100 units of Server Rack Unit 42U at $50.00 each.
+Subtotal: $5,000.00
+Tax: $0.00
+Total: $5,000.00

@@ -1,0 +1,11 @@
+INVOICE
+Vendor: PrimeParts Ltd
+PO Reference: PO-005
+
+1. Hydraulic Pump Assembly — Qty: 10 — $500.00 each
+2. Pressure Gauge Module — Qty: 25 — $80.00 each
+3. Steel Mounting Bracket — Qty: 100 — $12.00 each
+
+Subtotal: $8,200.00
+Tax: $0.00
+Total: $8,200.00
